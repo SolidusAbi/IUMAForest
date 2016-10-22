@@ -37,6 +37,7 @@
 #include "ForestRegression.h"
 #include "ForestSurvival.h"
 #include "ForestProbability.h"
+#include "Timer.h"
 
 int main(int argc, char **argv) {
 
@@ -83,6 +84,8 @@ int main(int argc, char **argv) {
       verbose_out = logfile;
     }
 
+    Timer* mainTimer = new Timer(verbose_out);
+
     // Call Ranger
     *verbose_out << "Starting Ranger." << std::endl;
     forest->initCpp(arg_handler.depvarname, arg_handler.memmode, arg_handler.file, arg_handler.mtry,
@@ -98,6 +101,9 @@ int main(int argc, char **argv) {
     }
     forest->writeOutput();
     *verbose_out << "Finished Ranger." << std::endl;
+
+    mainTimer->printElapsedTime();
+    delete mainTimer;
 
     delete forest;
   } catch (std::exception& e) {
