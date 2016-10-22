@@ -39,7 +39,7 @@ ArgumentHandler::ArgumentHandler(int argc, char **argv) :
         DEFAULT_PREDICTIONTYPE), splitweights(""), nthreads(DEFAULT_NUM_THREADS), predall(false), alpha(DEFAULT_ALPHA), minprop(
         DEFAULT_MINPROP), file(""), impmeasure(DEFAULT_IMPORTANCE_MODE), targetpartitionsize(0), mtry(0), outprefix(
         "ranger_out"), probability(false), splitrule(DEFAULT_SPLITRULE), statusvarname(""), ntree(DEFAULT_NUM_TREE), replace(
-        true), verbose(false), write(false), treetype(TREE_CLASSIFICATION), seed(0) {
+        true), verbose(false), write(false), treetype(TREE_CLASSIFICATION), seed(0), cuda(false) {
   this->argc = argc;
   this->argv = argv;
 }
@@ -56,6 +56,7 @@ int ArgumentHandler::processArguments() {
     const struct option long_options[] = {
 
       { "alwayssplitvars",      required_argument,  0, 'A'},
+      { "cuda",			            no_argument,        0, 'B'},
       { "caseweights",          required_argument,  0, 'C'},
       { "depvarname",           required_argument,  0, 'D'},
       { "fraction",             required_argument,  0, 'F'},
@@ -105,6 +106,11 @@ int ArgumentHandler::processArguments() {
     // upper case options
     case 'A':
       splitString(alwayssplitvars, optarg, ',');
+      break;
+
+    case 'B':
+      cuda = true;
+      nthreads = 1;
       break;
 
     case 'C':
@@ -174,16 +180,18 @@ int ArgumentHandler::processArguments() {
       break;
 
     case 'U':
-      try {
-        int temp = std::stoi(optarg);
-        if (temp < 1) {
-          throw std::runtime_error("");
-        } else {
-          nthreads = temp;
+      if (!cuda){
+        try {
+          int temp = std::stoi(optarg);
+          if (temp < 1) {
+            throw std::runtime_error("");
+          } else {
+            nthreads = temp;
+          }
+        } catch (...) {
+          throw std::runtime_error(
+              "Illegal argument for option 'nthreads'. Please give a positive integer. See '--help' for details.");
         }
-      } catch (...) {
-        throw std::runtime_error(
-            "Illegal argument for option 'nthreads'. Please give a positive integer. See '--help' for details.");
       }
       break;
 
