@@ -92,8 +92,13 @@ void CUDAUtility::bootstrap(int nSamples, double sampleFraction, int nTree, std:
   //Initialize the histogram of inbag samples
   cudaMemset2D(dev_inbagCounts, dev_inbagCounts_pitch, 0, nSamples * sizeof(int), nTree);
 
-  cudaMemcpyToSymbol(sampleIDsPitch_const, &dev_sampleIDs_pitch, sizeof(int));
-  cudaMemcpyToSymbol(inbagCountsPitch_const, &dev_inbagCounts_pitch, sizeof(int));
+  cudaError_t error;
+  error = cudaMemcpyToSymbol(sampleIDsPitch_const, &dev_sampleIDs_pitch, sizeof(int));
+  if (error != cudaSuccess)
+    printf("Yias, otra vez");
+  error = cudaMemcpyToSymbol(inbagCountsPitch_const, &dev_inbagCounts_pitch, sizeof(int));
+  if (error != cudaSuccess)
+      printf("Yias, otra vez2");
 
   int threadsPerBlock = min(nSamples, maxThreadsPerBlock);
   bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, dev_seed, dev_sampleIDs,

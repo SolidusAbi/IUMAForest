@@ -85,6 +85,26 @@ public:
     return inbag_counts;
   }
 
+  /**
+   * @brief Fuction used for set SamplesIDs.The main purpose is to be applied in the CUDA functionalities.
+   *
+   * @param sampleIDs std::vector<int> with the bootstrap samples IDs
+   * @param node node where this sample will be use.
+   */
+  void setSampleIDs(std::vector<size_t> sampleIDs, int node){
+    this->sampleIDs[node] = sampleIDs;
+  }
+
+  /**
+   * @brief Function used for set the histogram with samples used in the tree.
+   * The main purpose is to be applied in the CUDA functionalities.
+   *
+   * @param inbagCounts histogram with the samples used in the tree
+   */
+  void setInbagCounts(std::vector<size_t> inbagCounts){
+    this->inbag_counts = inbagCounts;
+  }
+
 protected:
   void createPossibleSplitVarSubset(std::vector<size_t>& result);
 

@@ -57,7 +57,7 @@ public:
       std::string status_variable_name, bool sample_with_replacement,
       std::vector<std::string>& unordered_variable_names, bool memory_saving_splitting, SplitRule splitrule,
       std::string case_weights_file, bool predict_all, double sample_fraction, double alpha, double minprop,
-      bool holdout, PredictionType prediction_type);
+      bool holdout, PredictionType prediction_type, bool cuda);
   void initR(std::string dependent_variable_name, Data* input_data, uint mtry, uint num_trees,
       std::ostream* verbose_out, uint seed, uint num_threads, ImportanceMode importance_mode, uint min_node_size,
       std::vector<std::vector<double>>& split_select_weights, std::vector<std::string>& always_split_variable_names,
@@ -220,6 +220,9 @@ protected:
   std::mutex mutex;
   std::condition_variable condition_variable;
 #endif
+
+  //CUDA Option
+  bool cuda;
 
   std::vector<Tree*> trees;
   Data* data;
