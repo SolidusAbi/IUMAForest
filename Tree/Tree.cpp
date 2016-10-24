@@ -96,18 +96,20 @@ void Tree::grow(std::vector<double>* variable_importance) {
 
   this->variable_importance = variable_importance;
 
-// Bootstrap, dependent if weighted or not and with or without replacement
-  if (case_weights->empty()) {
-    if (sample_with_replacement) {
-      bootstrap();
+  // Bootstrap, dependent if weighted or not and with or without replacement
+  if (this->sampleIDs[0].empty()){
+    if (case_weights->empty()) {
+      if (sample_with_replacement) {
+        bootstrap();
+      } else {
+        bootstrapWithoutReplacement();
+      }
     } else {
-      bootstrapWithoutReplacement();
-    }
-  } else {
-    if (sample_with_replacement) {
-      bootstrapWeighted();
-    } else {
-      bootstrapWithoutReplacementWeighted();
+      if (sample_with_replacement) {
+        bootstrapWeighted();
+      } else {
+        bootstrapWithoutReplacementWeighted();
+      }
     }
   }
 
