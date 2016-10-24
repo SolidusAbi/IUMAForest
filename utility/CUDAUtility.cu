@@ -28,8 +28,8 @@ __device__ size_t inbagCountsPitch_const;
  * @param sampleIDs (output) bootstrap sample for each tree.
  * @param inbagCounts (output) histogram of each bootstrap sample.
  */
-__global__ void bootstrap_kernel(int nTree, int nSamples, double sampleFraction, uint* seed, int* sampleIDs,
-    int* inbagCounts){
+__global__ void bootstrap_kernel(size_t nTree, size_t nSamples, double sampleFraction, uint* seed, size_t* sampleIDs,
+    uint* inbagCounts){
   int tid = threadIdx.x;
   int offset = blockDim.x;
 
@@ -48,11 +48,11 @@ __global__ void bootstrap_kernel(int nTree, int nSamples, double sampleFraction,
     int rand = (int)truncf(randf);
 
     //Row sample
-    int* rSample = (int *)((char *)sampleIDs + blockIdx.x*sampleIDsPitch_const);
+    size_t* rSample = (size_t *)((char *)sampleIDs + blockIdx.x*sampleIDsPitch_const);
     rSample[tid] = rand;
 
     //Row count
-    int* rCount = (int *)((char *)inbagCounts + blockIdx.x*inbagCountsPitch_const);
+    uint* rCount = (uint *)((char *)inbagCounts + blockIdx.x*inbagCountsPitch_const);
     atomicAdd(&(rCount[rand]), 1);
 
     tid += offset;
@@ -68,23 +68,24 @@ CUDAUtility& CUDAUtility::getInstance(){
 	return instance;
 }
 
-void CUDAUtility::bootstrap(int nSamples, double sampleFraction, int nTree, std::vector<uint>seeds,
-      std::vector<std::vector<int>>& samplesIDs, std::vector<std::vector<int>>& inbagCounts){
+void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
+    std::vector<std::vector<size_t>>& samplesIDs, std::vector<std::vector<uint>>& inbagCounts){
 
   //Host var
-  int *host_sampleIDs, *host_inbagCounts;
-  host_sampleIDs = (int *)malloc((int)(nSamples * sampleFraction * nTree) * sizeof(int));
-  host_inbagCounts = (int *)malloc(nSamples * nTree * sizeof(int));
+  size_t *host_sampleIDs;
+  uint *host_inbagCounts;
+  host_sampleIDs = (size_t *)malloc((int)(nSamples * sampleFraction * nTree) * sizeof(size_t));
+  host_inbagCounts = (uint *)malloc(nSamples * nTree * sizeof(int));
   //How i use memory in 2D, I need the pitch
-  size_t host_sampleIDs_pitch = nSamples * sampleFraction * sizeof(int);
+  size_t host_sampleIDs_pitch = nSamples * sampleFraction * sizeof(size_t);
   size_t host_inbagCounts_pitch = nSamples * sizeof(int);
 
   //Device var
-  int *dev_sampleIDs, *dev_inbagCounts;
-  uint *dev_seed;
+  size_t *dev_sampleIDs;
+  uint *dev_inbagCounts, *dev_seed;
   size_t dev_sampleIDs_pitch, dev_inbagCounts_pitch;
 
-  cudaMallocPitch((void **)&dev_sampleIDs, &dev_sampleIDs_pitch, (int)(nSamples * sampleFraction) * sizeof(int), nTree);
+  cudaMallocPitch((void **)&dev_sampleIDs, &dev_sampleIDs_pitch, (int)(nSamples * sampleFraction) * sizeof(size_t), nTree);
   cudaMallocPitch((void **)&dev_inbagCounts, &dev_inbagCounts_pitch, nSamples * sizeof(int), nTree);
   cudaMalloc((void **)&dev_seed, nTree * sizeof(int));
   cudaMemcpy(dev_seed, seeds.data(), nTree * sizeof(int), cudaMemcpyHostToDevice);
@@ -92,13 +93,8 @@ void CUDAUtility::bootstrap(int nSamples, double sampleFraction, int nTree, std:
   //Initialize the histogram of inbag samples
   cudaMemset2D(dev_inbagCounts, dev_inbagCounts_pitch, 0, nSamples * sizeof(int), nTree);
 
-  cudaError_t error;
-  error = cudaMemcpyToSymbol(sampleIDsPitch_const, &dev_sampleIDs_pitch, sizeof(int));
-  if (error != cudaSuccess)
-    printf("Yias, otra vez");
-  error = cudaMemcpyToSymbol(inbagCountsPitch_const, &dev_inbagCounts_pitch, sizeof(int));
-  if (error != cudaSuccess)
-      printf("Yias, otra vez2");
+  cudaMemcpyToSymbol(sampleIDsPitch_const, &dev_sampleIDs_pitch, sizeof(size_t));
+  cudaMemcpyToSymbol(inbagCountsPitch_const, &dev_inbagCounts_pitch, sizeof(size_t));
 
   int threadsPerBlock = min(nSamples, maxThreadsPerBlock);
   bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, dev_seed, dev_sampleIDs,
@@ -109,7 +105,7 @@ void CUDAUtility::bootstrap(int nSamples, double sampleFraction, int nTree, std:
   cudaMemcpy2D(host_inbagCounts, host_inbagCounts_pitch, dev_inbagCounts, dev_inbagCounts_pitch,
       host_inbagCounts_pitch, nTree, cudaMemcpyDeviceToHost);
 
-  arrayToVector(samplesIDs, host_sampleIDs, host_sampleIDs_pitch/sizeof(int), nTree);
+  arrayToVector(samplesIDs, host_sampleIDs, host_sampleIDs_pitch/sizeof(size_t), nTree);
   arrayToVector(inbagCounts, host_inbagCounts, host_inbagCounts_pitch/sizeof(int), nTree);
 
   free(host_sampleIDs);
@@ -122,10 +118,10 @@ void CUDAUtility::bootstrap(int nSamples, double sampleFraction, int nTree, std:
 }
 
 template<typename T>
-void CUDAUtility::arrayToVector(std::vector<std::vector<T>> &result, T *array, size_t pitch, size_t nRow){
+void CUDAUtility::arrayToVector(std::vector<std::vector<T>> &result, T *array, size_t width, size_t height){
 
-  for (int i=0; i<nRow; ++i){
-    std::vector<T> row ( &array[i*pitch], &array[(i+1)*pitch] );
+  for (int i=0; i<height; ++i){
+    std::vector<T> row ( &array[i*width], &array[(i+1)*width] );
     result.push_back(row);
   }
 

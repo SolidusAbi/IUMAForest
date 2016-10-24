@@ -140,8 +140,8 @@ public:
     return is_ordered_variable;
   }
 
-  std::vector<std::vector<size_t>> getInbagCounts() const {
-    std::vector<std::vector<size_t>> result;
+  std::vector<std::vector<uint>> getInbagCounts() const {
+    std::vector<std::vector<uint>> result;
     for (auto& tree : trees) {
       result.push_back(tree->getInbagCounts());
     }

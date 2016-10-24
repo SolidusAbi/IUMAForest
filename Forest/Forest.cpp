@@ -434,12 +434,19 @@ void Forest::grow() {
   }
 
   if (cuda == true){
-    std::vector<std::vector<int>> samplesIDsPerTree, inbagCountsPerTree;
+    std::vector<std::vector<size_t>> samplesIDsPerTree;
+    std::vector<std::vector<uint>> inbagCountsPerTree;
     CUDAUtility::getInstance().bootstrap(num_samples,sample_fraction,num_trees,seedPerTree, samplesIDsPerTree, inbagCountsPerTree);
-    /*for (int i=0; i< num_trees; ++i){
+    /*for (int i=0; i<num_trees; ++i){
+		for (int j=0; j<num_samples; ++j){
+			std::cout << inbagCountsPerTree[i][j] << ", ";
+		}
+		std::cout << std::endl;
+	}*/
+    for (int i=0; i< num_trees; ++i){
       trees[i]->setSampleIDs(samplesIDsPerTree[i], 0);
       trees[i]->setInbagCounts(inbagCountsPerTree[i]);
-    }*/
+    }
   }
   seedPerTree.clear();
 

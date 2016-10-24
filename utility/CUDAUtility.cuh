@@ -33,8 +33,8 @@ public:
    * @param samplesIDs      array that contains the samplesIDs per tree
    * @param inbagCounts     histogram of samplesIDs per tree
    */
-  void bootstrap(int nSamples, double sampleFraction, int nTree, std::vector<uint>seeds,
-      std::vector<std::vector<int>>& samplesIDs, std::vector<std::vector<int>>& inbagCounts);
+  void bootstrap(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
+      std::vector<std::vector<size_t>>& samplesIDs, std::vector<std::vector<uint>>& inbagCounts);
 
 private:
   CUDAUtility();
@@ -44,11 +44,11 @@ private:
    *
    * @param result  the std::vector<std::vector<T>> result
    * @param array   pointer with the array
-   * @param pitch   pitch without sizeof(T)
-   * @param nRow    number of row of the array
+   * @param width   Width of matrix set (number of columns)
+   * @param height  number of row of the array
    */
   template <typename T>
-  void arrayToVector(std::vector<std::vector<T>> &result, T *array, size_t pitch, size_t nRow);
+  void arrayToVector(std::vector<std::vector<T>> &result, T *array, size_t width, size_t height);
 
   int maxThreadsPerBlock;
 };

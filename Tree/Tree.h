@@ -81,7 +81,7 @@ public:
     return num_samples_oob;
   }
 
-  const std::vector<size_t>& getInbagCounts() const {
+  const std::vector<uint>& getInbagCounts() const {
     return inbag_counts;
   }
 
@@ -101,7 +101,7 @@ public:
    *
    * @param inbagCounts histogram with the samples used in the tree
    */
-  void setInbagCounts(std::vector<size_t> inbagCounts){
+  void setInbagCounts(std::vector<uint> inbagCounts){
     this->inbag_counts = inbagCounts;
   }
 
@@ -175,7 +175,7 @@ protected:
 
   // Inbag counts
   bool keep_inbag;
-  std::vector<size_t> inbag_counts;
+  std::vector<uint> inbag_counts;
 
   // Random number generator
   std::mt19937_64 random_number_generator;
