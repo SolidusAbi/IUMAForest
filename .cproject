@@ -109,6 +109,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/IUMAForest/Forest}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/IUMAForest}&quot;"/>
 								</option>
+								<option id="nvcc.compiler.maxregcount.1048582261" name="Maximum number of registers (-maxrregcount)" superClass="nvcc.compiler.maxregcount" value="128" valueType="string"/>
 								<inputType id="nvcc.compiler.input.cu.744433487" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.1306975998" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.1813753508" superClass="nvcc.compiler.input.c"/>

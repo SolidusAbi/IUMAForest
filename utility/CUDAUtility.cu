@@ -257,11 +257,6 @@ void CUDAUtility::findBestSplit(DataDouble *data, std::vector<size_t> possibleSp
   cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, 0);
 
-  cudaEvent_t startEvent, stopEvent;
-  cudaEventCreate(&startEvent);
-  cudaEventCreate(&stopEvent);
-  cudaEventRecord(startEvent, 0);
-
   size_t* classCounts = new size_t[nClasses]();
   // Compute overall class counts
   for (size_t i = 0; i < nSampleNode; ++i) {
@@ -375,15 +370,6 @@ void CUDAUtility::findBestSplit(DataDouble *data, std::vector<size_t> possibleSp
       *bestValue = bestValuePerVarID[i];
     }
   }
-
-  cudaEventRecord(stopEvent, 0);
-  cudaEventSynchronize(stopEvent);
-  float elapsedTimeCuda;
-  cudaEventElapsedTime(&elapsedTimeCuda, startEvent, stopEvent);
-
-  printf("Resultado en GPU...\n");
-  printf("Time for operation: %3.6f seconds\n", elapsedTimeCuda/1000);
-  //printf("bestVarID: %d; bestValue: %f; bestDecrease: %f\n", bestVarID, bestValue, bestDecrease);
 
   free(possiblesSplitValuesPerVarID);
   free(classCounts);
