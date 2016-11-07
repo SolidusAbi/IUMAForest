@@ -318,6 +318,7 @@ void Forest::writeOutput() {
   *verbose_out << "Variable importance mode:          " << importance_mode << std::endl;
   *verbose_out << "Memory mode:                       " << memory_mode << std::endl;
   *verbose_out << "Seed:                              " << seed << std::endl;
+  *verbose_out << "CUDA:                              " << cuda << std::endl;
   *verbose_out << "Number of threads:                 " << num_threads << std::endl;
   *verbose_out << std::endl;
 

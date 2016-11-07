@@ -64,6 +64,10 @@ public:
     data[col * num_rows + row] = value;
   }
 
+  double*  getData(){
+    return data;
+  }
+
 private:
   double* data;
 

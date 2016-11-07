@@ -103,6 +103,18 @@ public:
    */
   void setInbagCounts(std::vector<uint> inbagCounts){
     this->inbag_counts = inbagCounts;
+
+    // Save OOB samples
+    for (size_t s = 0; s < inbag_counts.size(); ++s) {
+      if (inbag_counts[s] == 0) {
+        oob_sampleIDs.push_back(s);
+      }
+    }
+    num_samples_oob = oob_sampleIDs.size();
+
+    if (!keep_inbag) {
+      inbag_counts.clear();
+    }
   }
 
 protected:
