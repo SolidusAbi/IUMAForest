@@ -286,12 +286,6 @@ void CUDAUtility::findBestSplit(DataDouble *data, std::vector<size_t> possibleSp
       nPossibleSplitValuesMax =  possiblesValues.size();
   }
 
-  /*for (size_t i = 0; i < possibleSplitVarIDs.size(); ++i){
-    printf("nPosibleSplitValues[%d]=%d\n",i, nPossibleSplitValues[i]);
-  }*/
-
-
-
   cudaMemcpyToSymbol(nPossibleValueMax_Const, &nPossibleSplitValuesMax, sizeof(size_t));
 
   //Prepare the possible values data for introduce in the GPU

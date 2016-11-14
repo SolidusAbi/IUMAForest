@@ -134,21 +134,19 @@ double TreeClassification::computePredictionAccuracyInternal() {
 
 bool TreeClassification::findBestSplit(size_t nodeID, std::vector<size_t>& possible_split_varIDs) {
 
-  double best_decrease_cuda = -1;
-  size_t best_varID_cuda = 0;
-  double best_value_cuda = 0;
-  //if (cuda){
-    size_t nSamples = sampleIDs[nodeID].size();
-    size_t nClasses = class_values->size();
-    CUDAUtility::getInstance().findBestSplit((DataDouble *)data, possible_split_varIDs, nClasses,
-        nSamples, response_classIDs, &(sampleIDs[nodeID]), &best_varID_cuda, &best_value_cuda, &best_decrease_cuda);
-  //}
 
   size_t num_samples_node = sampleIDs[nodeID].size();
   size_t num_classes = class_values->size();
   double best_decrease = -1;
   size_t best_varID = 0;
   double best_value = 0;
+  double best_decrease_cuda = -1;
+  size_t best_varID_cuda = 0;
+  double best_value_cuda = 0;
+  //if (cuda){
+    CUDAUtility::getInstance().findBestSplit((DataDouble *)data, possible_split_varIDs, num_classes,
+        num_samples_node, response_classIDs, &(sampleIDs[nodeID]), &best_varID_cuda, &best_value_cuda, &best_decrease_cuda);
+  //}
 
   size_t* class_counts = new size_t[num_classes]();
   // Compute overall class counts
