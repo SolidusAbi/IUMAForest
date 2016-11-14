@@ -431,7 +431,7 @@ void Forest::grow() {
     trees[i]->init(data, mtry, dependent_varID, num_samples, tree_seed, &deterministic_varIDs, &split_select_varIDs,
         tree_split_select_weights, importance_mode, min_node_size, &no_split_variables, sample_with_replacement,
         &is_ordered_variable, memory_saving_splitting, splitrule, &case_weights, keep_inbag, sample_fraction, alpha,
-        minprop, holdout);
+        minprop, holdout, cuda);
   }
 
   if (cuda == true){

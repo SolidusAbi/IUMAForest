@@ -36,6 +36,7 @@
 #include "TreeClassification.h"
 #include "utility.h"
 #include "Data.h"
+#include "CUDAUtility.cuh"
 
 TreeClassification::TreeClassification(std::vector<double>* class_values, std::vector<uint>* response_classIDs) :
     class_values(class_values), response_classIDs(response_classIDs), counter(0), counter_per_class(0) {
@@ -133,6 +134,16 @@ double TreeClassification::computePredictionAccuracyInternal() {
 
 bool TreeClassification::findBestSplit(size_t nodeID, std::vector<size_t>& possible_split_varIDs) {
 
+  double best_decrease_cuda = -1;
+  size_t best_varID_cuda = 0;
+  double best_value_cuda = 0;
+  //if (cuda){
+    size_t nSamples = sampleIDs[nodeID].size();
+    size_t nClasses = class_values->size();
+    CUDAUtility::getInstance().findBestSplit((DataDouble *)data, possible_split_varIDs, nClasses,
+        nSamples, response_classIDs, &(sampleIDs[nodeID]), &best_varID_cuda, &best_value_cuda, &best_decrease_cuda);
+  //}
+
   size_t num_samples_node = sampleIDs[nodeID].size();
   size_t num_classes = class_values->size();
   double best_decrease = -1;
@@ -174,6 +185,11 @@ bool TreeClassification::findBestSplit(size_t nodeID, std::vector<size_t>& possi
   }
 
   delete[] class_counts;
+
+  if (best_decrease == best_decrease_cuda){
+    printf("Cuadra hermano %lf == %lf\n", best_decrease, best_decrease_cuda);
+  } else
+    printf("NO Cuadra hermano %lf != %lf\n", best_decrease, best_decrease_cuda);
 
   // Stop if no good split found
   if (best_decrease < 0) {

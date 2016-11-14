@@ -2,7 +2,7 @@
  * CUDAUtility.cpp
  *
  *  Created on: 13/10/2016
- *      Author: Abian Hernandez
+ *      Author: abian
  */
 
 #include <stdio.h>
@@ -257,6 +257,11 @@ void CUDAUtility::findBestSplit(DataDouble *data, std::vector<size_t> possibleSp
   cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, 0);
 
+  cudaEvent_t startEvent, stopEvent;
+  cudaEventCreate(&startEvent);
+  cudaEventCreate(&stopEvent);
+  cudaEventRecord(startEvent, 0);
+
   size_t* classCounts = new size_t[nClasses]();
   // Compute overall class counts
   for (size_t i = 0; i < nSampleNode; ++i) {
@@ -280,6 +285,12 @@ void CUDAUtility::findBestSplit(DataDouble *data, std::vector<size_t> possibleSp
     if(nPossibleSplitValuesMax < possiblesValues.size())
       nPossibleSplitValuesMax =  possiblesValues.size();
   }
+
+  /*for (size_t i = 0; i < possibleSplitVarIDs.size(); ++i){
+    printf("nPosibleSplitValues[%d]=%d\n",i, nPossibleSplitValues[i]);
+  }*/
+
+
 
   cudaMemcpyToSymbol(nPossibleValueMax_Const, &nPossibleSplitValuesMax, sizeof(size_t));
 
@@ -371,6 +382,11 @@ void CUDAUtility::findBestSplit(DataDouble *data, std::vector<size_t> possibleSp
     }
   }
 
+  cudaEventRecord(stopEvent, 0);
+  cudaEventSynchronize(stopEvent);
+  float elapsedTimeCuda;
+  cudaEventElapsedTime(&elapsedTimeCuda, startEvent, stopEvent);
+
   free(possiblesSplitValuesPerVarID);
   free(classCounts);
 
@@ -396,4 +412,3 @@ void CUDAUtility::arrayToVector(std::vector<std::vector<T>> &result, T *array, s
 
   return;
 }
-
