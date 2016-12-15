@@ -2,3 +2,5 @@
 /ranger_out.confusion
 /ranger_out.importance
 /Debug/
+/ranger_out.prediction
+/ranger_out.forest

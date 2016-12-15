@@ -111,6 +111,8 @@ public:
     }
   }
 
+  virtual void insertDataGPU() = 0;
+
 protected:
   std::vector<std::string> variable_names;
   size_t num_rows;

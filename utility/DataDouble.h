@@ -68,6 +68,9 @@ public:
     return data;
   }
 
+  void insertDataGPU();
+
+
 private:
   double* data;
 

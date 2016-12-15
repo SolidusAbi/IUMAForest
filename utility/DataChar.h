@@ -64,6 +64,9 @@ public:
     data[col * num_rows + row] = (char) value;
   }
 
+  //To do......
+  void insertDataGPU(){}
+
 private:
   char* data;
 

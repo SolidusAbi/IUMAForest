@@ -91,6 +91,8 @@ void Forest::initCpp(std::string dependent_variable_name, MemoryMode memory_mode
         << std::endl;
   }
 
+  data->insertDataGPU(); ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   // Set prediction mode
   bool prediction_mode = false;
   if (!load_forest_filename.empty()) {
@@ -289,6 +291,8 @@ void Forest::run(bool verbose) {
     }
 
     grow();
+
+    CUDAUtility::getInstance().freeDataGPU();
 
     if (verbose) {
       *verbose_out << "Computing prediction error .." << std::endl;

@@ -56,6 +56,9 @@ public:
     data[col * num_rows + row] = (float) value;
   }
 
+  //To do......
+  void insertDataGPU(){}
+
 private:
   float* data;
 

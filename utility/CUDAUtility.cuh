@@ -2,7 +2,7 @@
  * CUDAUtility.h
  *
  *  Created on: 13/10/2016
- *      Author: Abian Hernandez
+ *      Author: abian
  */
 
 #ifndef CUDAUTILITY_H_
@@ -11,10 +11,10 @@
 #include <iostream>
 #include <vector>
 
-#include "DataDouble.h"
+#include "Data.h"
 
 /**
- * @brief Class that implements all CUDA features
+ *	@brief Class that implements all CUDA features
  */
 class CUDAUtility {
 public:
@@ -38,6 +38,10 @@ public:
   void bootstrap(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
       std::vector<std::vector<size_t>>& samplesIDs, std::vector<std::vector<uint>>& inbagCounts);
 
+  //Test, return elapsed time
+  float bootstrapTest(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
+      std::vector<std::vector<size_t>>& samplesIDs, std::vector<std::vector<uint>>& inbagCounts);
+
   /**
    * @brief Finding the best varID and value for this varID. The best vadID must be one of the
    *  possible varID listed that have been generated randomly.
@@ -49,12 +53,36 @@ public:
    * @param responseClassIDs    vector with the classification result in each sample
    * @param samplesIDsNode      samples used for finding the best split varID
    */
-  void findBestSplit(DataDouble *data, std::vector<size_t> possibleSplitVarIDs, size_t nClasses,
+  void findBestSplit(Data *data, std::vector<size_t> possibleSplitVarIDs, size_t nClasses,
       size_t nSampleNode, std::vector<uint> *responseClassIDs, std::vector<size_t> *samplesIDsNode,
       size_t *bestVarID, double *bestValue, double *bestDecrease);
 
+  //Test, return elapsed time
+  float findBestSplitTest(Data *data, std::vector<size_t> possibleSplitVarIDs, size_t nClasses,
+      size_t nSampleNode, std::vector<uint> *responseClassIDs, std::vector<size_t> *samplesIDsNode,
+      size_t *bestVarID, double *bestValue, double *bestDecrease);
+
+  /**
+   * @brief This function allows you to insert the dataset into the memory of the GPU
+   *
+   * @param data  Contains the dataset
+   * @param nCols number of columns of the dataset
+   * @param nRows number of rows of the dataset
+   */
+  void setDataGPU(double *data, size_t nCols, size_t nRows);
+
+  /**
+   * @brief Free the dataset of the GPU memory
+   */
+  void freeDataGPU();
+
+  void resetGPU();
+
+  void test(size_t nSamples, std::vector<size_t> *samplesIDsNode, size_t nClasses, std::vector<uint> *responseClassIDs);
+
 private:
   CUDAUtility();
+
 
   /**
    * @brief this function convert a pointer of a array to a std::vector<std::vector<T>>
@@ -66,6 +94,9 @@ private:
    */
   template <typename T>
   void arrayToVector(std::vector<std::vector<T>> &result, T *array, size_t width, size_t height);
+
+  double *dev_data;
+  size_t nCols, nRows;
 
   int maxThreadsPerBlock;
 };
