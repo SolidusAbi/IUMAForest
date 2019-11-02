@@ -2,6 +2,7 @@
 #define BOOTSTRAPKERNEL_H_
 
   void setConstantMemoryPitchBootstrap(size_t *sampleIDsPitch, size_t *inbagCountsPitch);
+  void setConstantMemoryPitchBootstrap(size_t *sampleIDsPitch);
 
   /**
    * @brief Algorithm bootstrap not weighted with replacement for n tree. It will generate N bootstrap samples with the objective
@@ -15,6 +16,6 @@
    * @param inbagCounts (output) histogram of each bootstrap sample.
    */
   __global__ void bootstrap_kernel(size_t nTree, size_t nSamples, double sampleFraction,
-      uint* seed, size_t* sampleIDs, uint* inbagCounts);
+      uint seed, size_t* sampleIDs, uint* inbagCounts);
 
 #endif

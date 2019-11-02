@@ -57,7 +57,7 @@ public:
   }
 
   //To do......
-  void insertDataGPU(){}
+  void insertDataGPU() override;
 
 private:
   float* data;

@@ -30,6 +30,7 @@ wright@imbs.uni-luebeck.de
 #include <vector>
 
 #include "DataFloat.h"
+#include "CUDAUtility.cuh"
 
 DataFloat::DataFloat() :
     data(0) {
@@ -53,5 +54,10 @@ DataFloat::~DataFloat() {
   if (!externalData) {
     delete[] data;
   }
+}
+
+void DataFloat::insertDataGPU()
+{
+	CUDAUtility::getInstance().setDataGPU(data, num_cols, num_rows);
 }
 

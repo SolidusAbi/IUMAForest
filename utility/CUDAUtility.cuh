@@ -8,8 +8,13 @@
 #ifndef CUDAUTILITY_H_
 #define CUDAUTILITY_H_
 
+// Std Includes
 #include <iostream>
 #include <vector>
+
+// CUDA Includes
+#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "Data.h"
 
@@ -35,7 +40,7 @@ public:
    * @param samplesIDs      array that contains the samplesIDs per tree
    * @param inbagCounts     histogram of samplesIDs per tree
    */
-  void bootstrap(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
+  void bootstrap(size_t nSamples, double sampleFraction, size_t nTree,
       std::vector<std::vector<size_t>>& samplesIDs, std::vector<std::vector<uint>>& inbagCounts);
 
   //Test, return elapsed time
@@ -62,14 +67,24 @@ public:
       size_t nSampleNode, std::vector<uint> *responseClassIDs, std::vector<size_t> *samplesIDsNode,
       size_t *bestVarID, double *bestValue, double *bestDecrease);
 
+//  /**
+//   * @brief This function allows you to insert the dataset into the memory of the GPU
+//   *
+//   * @param data  Contains the dataset
+//   * @param nCols number of columns of the dataset
+//   * @param nRows number of rows of the dataset
+//   */
+//  void setDataGPU(double *data, size_t nCols, size_t nRows);
+
   /**
-   * @brief This function allows you to insert the dataset into the memory of the GPU
-   *
-   * @param data  Contains the dataset
-   * @param nCols number of columns of the dataset
-   * @param nRows number of rows of the dataset
-   */
-  void setDataGPU(double *data, size_t nCols, size_t nRows);
+   * ¡¡¡Chapuza!!! Arreglar!!!
+  * @brief This function allows you to insert the dataset into the memory of the GPU
+  *
+  * @param data  Contains the dataset
+  * @param nCols number of columns of the dataset
+  * @param nRows number of rows of the dataset
+  */
+  void setDataGPU(float *data, size_t nCols, size_t nRows);
 
   /**
    * @brief Free the dataset of the GPU memory
@@ -95,10 +110,10 @@ private:
   template <typename T>
   void arrayToVector(std::vector<std::vector<T>> &result, T *array, size_t width, size_t height);
 
-  double *dev_data;
+  float *dev_data; //chapuza!!
   size_t nCols, nRows;
 
-  int maxThreadsPerBlock;
+  cudaDeviceProp deviceProp;
 };
 
 

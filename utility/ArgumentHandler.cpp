@@ -56,7 +56,7 @@ int ArgumentHandler::processArguments() {
     const struct option long_options[] = {
 
       { "alwayssplitvars",      required_argument,  0, 'A'},
-      { "cuda",			            no_argument,        0, 'B'},
+      { "cuda",			        no_argument,        0, 'B'},
       { "caseweights",          required_argument,  0, 'C'},
       { "depvarname",           required_argument,  0, 'D'},
       { "fraction",             required_argument,  0, 'F'},
@@ -547,6 +547,8 @@ void ArgumentHandler::displayHelp() {
   std::cout << "    " << "                              MODE = 2: char." << std::endl;
   std::cout << "    " << "                              (Default: 0)" << std::endl;
   std::cout << "    " << "--savemem                     Use memory saving (but slower) splitting mode." << std::endl;
+  std::cout << "    " << "--cuda                        Use NVidia CUDA implementation in training process." << std::endl;
+
   std::cout << std::endl;
 
   std::cout << "See README file for details and examples." << std::endl;

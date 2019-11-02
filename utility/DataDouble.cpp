@@ -40,5 +40,6 @@ DataDouble::~DataDouble() {
 }
 
 void DataDouble::insertDataGPU(){
-  CUDAUtility::getInstance().setDataGPU(data, num_cols, num_rows);
+	//TODO!
+//  CUDAUtility::getInstance().setDataGPU(static_cast<float *>(data), num_cols, num_rows);
 }

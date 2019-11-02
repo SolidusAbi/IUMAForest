@@ -9,7 +9,7 @@ void setConstantMemoryPitch(size_t *nPossibleValueMax, size_t *dataPitch) {
   cudaMemcpyToSymbol(dataPitchConst, dataPitch, sizeof(size_t));
 }
 
-__global__ void classCountKernel(double *data, size_t nSamples, size_t *samplesID, size_t nClasses, uint *responseClassIDs, size_t *classCounts){
+__global__ void classCountKernel(float *data, size_t nSamples, size_t *samplesID, size_t nClasses, uint *responseClassIDs, size_t *classCounts){
   extern __shared__ size_t classCountTmp[];
 
   size_t tid = threadIdx.x + blockIdx.x*blockDim.x;
@@ -35,7 +35,7 @@ __global__ void classCountKernel(double *data, size_t nSamples, size_t *samplesI
 
 }
 
-__global__ void overallClassCountRightKernel(double* data, size_t nSamples, size_t *samplesID, size_t *possibleSplitVarIDs, size_t *nPossibleValues,
+__global__ void overallClassCountRightKernel(float* data, size_t nSamples, size_t *samplesID, size_t *possibleSplitVarIDs, size_t *nPossibleValues,
     double *possibleSplitValues, size_t nClasses, size_t* classCounts, uint *responseClassIDs, size_t *nRight, size_t *classCountsRight){
 
   extern __shared__ size_t countClassTmp[];

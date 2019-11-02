@@ -39,7 +39,21 @@
 #include "ForestProbability.h"
 #include "Timer.h"
 
+//Testing!!
+#include "CUDAUtility.cuh"
+
 int main(int argc, char **argv) {
+
+/*	std::vector<std::vector<uint>> inbagCounts;
+	std::vector<std::vector<size_t>> samplesIDs;
+	std::vector<uint> seed;
+	size_t nTree = 100;
+	for (size_t i=0; i<nTree; ++i)
+	{
+		seed.push_back(static_cast<uint>(i));
+	}
+	CUDAUtility::getInstance().bootstrapTest(1000, 0.25, nTree, seed, samplesIDs, inbagCounts);
+	return 0; */
 
   ArgumentHandler arg_handler(argc, argv);
   Forest* forest = 0;

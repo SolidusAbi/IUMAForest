@@ -5,14 +5,16 @@
  *      Author: abian
  */
 
+// Std Includes
 #include <stdio.h>
-#include <curand.h>
+#include <math.h>
+#include <time.h>
+
+// CUDA Includes
 #include <curand_kernel.h>
-#include <thrust/device_vector.h>
+#include <device_launch_parameters.h>
 
-#include <random>
-#include <limits>
-
+// Project Includes
 #include "CUDAUtility.cuh"
 #include "kernels/bootstrapKernel.h"
 #include "kernels/findBestSplitKernel.h"
@@ -21,8 +23,9 @@
 
 #define min(a,b) (a<b?a:b);
 
-CUDAUtility::CUDAUtility() : maxThreadsPerBlock(512), dev_data(0), nCols(0), nRows(0) {
+CUDAUtility::CUDAUtility() : dev_data(nullptr), nCols(0), nRows(0) {
   cudaDeviceReset();
+  cudaGetDeviceProperties(&deviceProp, 0);
 }
 
 CUDAUtility::~CUDAUtility() {
@@ -34,7 +37,7 @@ CUDAUtility& CUDAUtility::getInstance(){
 	return instance;
 }
 
-void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
+void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree,
     std::vector<std::vector<size_t>>& samplesIDs, std::vector<std::vector<uint>>& inbagCounts){
 
   //Host var
@@ -42,31 +45,28 @@ void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree
   uint *host_inbagCounts;
   host_sampleIDs = (size_t *)malloc((int)(nSamples * sampleFraction * nTree) * sizeof(size_t));
   host_inbagCounts = (uint *)malloc(nSamples * nTree * sizeof(int));
-  //How i use memory in 2D, I need the pitch
+  //As I use memory in 2D, I need the pitch
   size_t host_sampleIDs_pitch = nSamples * sampleFraction * sizeof(size_t);
   size_t host_inbagCounts_pitch = nSamples * sizeof(int);
 
   //Device var
   size_t *dev_sampleIDs;
-  uint *dev_inbagCounts, *dev_seed;
+  uint *dev_inbagCounts;
   size_t dev_sampleIDs_pitch, dev_inbagCounts_pitch;
 
   cudaMallocPitch((void **)&dev_sampleIDs, &dev_sampleIDs_pitch, (int)(nSamples * sampleFraction) * sizeof(size_t), nTree);
   cudaMallocPitch((void **)&dev_inbagCounts, &dev_inbagCounts_pitch, nSamples * sizeof(int), nTree);
-  cudaMalloc((void **)&dev_seed, nTree * sizeof(int));
-  cudaMemcpy(dev_seed, seeds.data(), nTree * sizeof(int), cudaMemcpyHostToDevice);
 
   //Initialize the histogram of inbag samples
   cudaMemset2D(dev_inbagCounts, dev_inbagCounts_pitch, 0, nSamples * sizeof(int), nTree);
 
   setConstantMemoryPitchBootstrap(&dev_sampleIDs_pitch, &dev_inbagCounts_pitch);
 
-  /*cudaMemcpyToSymbol(sampleIDsPitch_const, &dev_sampleIDs_pitch, sizeof(size_t));
-  cudaMemcpyToSymbol(inbagCountsPitch_const, &dev_inbagCounts_pitch, sizeof(size_t));*/
-
-  int threadsPerBlock = min(nSamples, maxThreadsPerBlock);
-  bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, dev_seed, dev_sampleIDs,
+  int threadsPerBlock = min(nSamples, deviceProp.maxThreadsPerBlock);
+  bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, time(0), dev_sampleIDs,
       dev_inbagCounts);
+//  bootstrap_kernel<<<nTree,120>>>(nTree, nSamples, sampleFraction, time(0), dev_sampleIDs,
+//        dev_inbagCounts);
 
   cudaMemcpy2D(host_sampleIDs, host_sampleIDs_pitch, dev_sampleIDs, dev_sampleIDs_pitch, host_sampleIDs_pitch,
       nTree, cudaMemcpyDeviceToHost);
@@ -76,13 +76,16 @@ void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree
   arrayToVector(samplesIDs, host_sampleIDs, host_sampleIDs_pitch/sizeof(size_t), nTree);
   arrayToVector(inbagCounts, host_inbagCounts, host_inbagCounts_pitch/sizeof(int), nTree);
 
+//  for (size_t treeIdx=0; treeIdx<2; ++treeIdx)
+//  {
+//	  for (size_t sampleIdx=0; sampleIdx<10; ++sampleIdx)
+//		  std::cout << samplesIDs[treeIdx][sampleIdx] << std::endl;
+//  }
+
   free(host_sampleIDs);
   free(host_inbagCounts);
   cudaFree(dev_sampleIDs);
   cudaFree(dev_inbagCounts);
-  cudaFree(dev_seed);
-
-  return;
 }
 
 float CUDAUtility::bootstrapTest(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,
@@ -93,7 +96,7 @@ float CUDAUtility::bootstrapTest(size_t nSamples, double sampleFraction, size_t 
   cudaEventCreate(&stopEvent);
   cudaEventRecord(startEvent, 0);
 
-  bootstrap(nSamples, sampleFraction, nTree, seeds, samplesIDs, inbagCounts);
+  bootstrap(nSamples, sampleFraction, nTree, samplesIDs, inbagCounts);
 
   cudaEventRecord(stopEvent, 0);
   cudaEventSynchronize(stopEvent);
@@ -176,6 +179,7 @@ void CUDAUtility::findBestSplit(Data *data, std::vector<size_t> possibleSplitVar
   cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, 0);
 
+  uint maxThreadsPerBlock = deviceProp.maxThreadsPerBlock;
   size_t nBlocks = truncf(nSampleNode/(maxThreadsPerBlock*2));
   classCountKernel<<<nBlocks, maxThreadsPerBlock, nClasses*sizeof(size_t)>>>(dev_data, nSampleNode, dev_samplesID, nClasses, dev_responseClassID, dev_classCounts);
 
@@ -227,8 +231,6 @@ void CUDAUtility::findBestSplit(Data *data, std::vector<size_t> possibleSplitVar
 
   free(bestValuePerVarID);
   free(bestDecreasePerVarID);
-
-  return;
 }
 
 float CUDAUtility::findBestSplitTest(Data *data, std::vector<size_t> possibleSplitVarIDs, size_t nClasses,
@@ -267,11 +269,18 @@ void CUDAUtility::arrayToVector(std::vector<std::vector<T>> &result, T *array, s
   return;
 }
 
-void CUDAUtility::setDataGPU(double *data, size_t nCols, size_t nRows){
+//void CUDAUtility::setDataGPU(double *data, size_t nCols, size_t nRows){
+//  this->nCols = nCols;
+//  this->nRows = nRows;
+//  cudaMalloc((void **)&dev_data, nCols * nRows * sizeof(double));
+//  cudaMemcpy(dev_data, data, nCols * nRows * sizeof(double), cudaMemcpyHostToDevice);
+//}
+
+void CUDAUtility::setDataGPU(float *data, size_t nCols, size_t nRows){
   this->nCols = nCols;
   this->nRows = nRows;
-  cudaMalloc((void **)&dev_data, nCols * nRows * sizeof(double));
-  cudaMemcpy(dev_data, data, nCols * nRows * sizeof(double), cudaMemcpyHostToDevice);
+  cudaMalloc((void **)&dev_data, nCols * nRows * sizeof(float));
+  cudaMemcpy(dev_data, data, nCols * nRows * sizeof(float), cudaMemcpyHostToDevice);
 }
 
 void CUDAUtility::freeDataGPU(){

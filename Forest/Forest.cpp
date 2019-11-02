@@ -91,7 +91,8 @@ void Forest::initCpp(std::string dependent_variable_name, MemoryMode memory_mode
         << std::endl;
   }
 
-  data->insertDataGPU(); ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  if (cuda)
+	  data->insertDataGPU(); ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Set prediction mode
   bool prediction_mode = false;
@@ -438,10 +439,11 @@ void Forest::grow() {
         minprop, holdout, cuda);
   }
 
+  ///// Working!! /////
   if (cuda == true){
     std::vector<std::vector<size_t>> samplesIDsPerTree;
     std::vector<std::vector<uint>> inbagCountsPerTree;
-    CUDAUtility::getInstance().bootstrap(num_samples,sample_fraction,num_trees,seedPerTree, samplesIDsPerTree, inbagCountsPerTree);
+    CUDAUtility::getInstance().bootstrap(num_samples,sample_fraction,num_trees, samplesIDsPerTree, inbagCountsPerTree);
 
     //To set the result of GPU Bootstrap
     for (int i=0; i< num_trees; ++i){

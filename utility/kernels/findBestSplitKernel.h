@@ -12,7 +12,7 @@ void setConstantMemoryPitch(size_t *nPossibleValueMax, size_t *dataPitch);
  * @param responseClassIDs
  * @param classCounts
  */
-__global__ void classCountKernel(double *data, size_t nSamples, size_t *samplesID, size_t nClasses, uint *responseClassIDs, size_t *classCounts);
+__global__ void classCountKernel(float *data, size_t nSamples, size_t *samplesID, size_t nClasses, uint *responseClassIDs, size_t *classCounts);
 
 /**
  * @brief Compute the count samples in right child and generate a overall class counts in right child node.
@@ -29,7 +29,7 @@ __global__ void classCountKernel(double *data, size_t nSamples, size_t *samplesI
  * @param classCountsRight    (result) overall class counts in right child node
  * @param nRight              (result) count samples in right child
  */
-__global__ void overallClassCountRightKernel(double* data, size_t nSamples, size_t *samplesID, size_t *possibleSplitVarIDs, size_t *nPossibleValues,
+__global__ void overallClassCountRightKernel(float* data, size_t nSamples, size_t *samplesID, size_t *possibleSplitVarIDs, size_t *nPossibleValues,
     double *possibleSplitValues, size_t nClasses, size_t* classCounts, uint *responseClassIDs, size_t *nRight, size_t *classCountsRight);
 
 /**
