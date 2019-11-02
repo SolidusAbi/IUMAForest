@@ -7,8 +7,4 @@ ranger_out.forest
 .cproject
 .metadata/
 ranger_out.log
-
-
-.cproject
-RemoteSystemsTempFiles/.project
-.cproject
+RemoteSystemsTempFiles/
