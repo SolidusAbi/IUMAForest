@@ -27,6 +27,7 @@ wright@imbs.uni-luebeck.de
 #-------------------------------------------------------------------------------*/
 
 #include "DataDouble.h"
+#include "CUDAUtility.cuh"
 
 DataDouble::DataDouble() :
     data(0) {
@@ -38,3 +39,7 @@ DataDouble::~DataDouble() {
   }
 }
 
+void DataDouble::insertDataGPU(){
+	//TODO!
+//  CUDAUtility::getInstance().setDataGPU(static_cast<float *>(data), num_cols, num_rows);
+}

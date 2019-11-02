@@ -8,8 +8,8 @@
 #include <iostream>
 #include <chrono>
 
-#ifndef TIME_H_
-#define TIME_H_
+#ifndef TIMER_H_
+#define TIMER_H_
 
 class Timer {
 	typedef std::chrono::high_resolution_clock::time_point time_point;

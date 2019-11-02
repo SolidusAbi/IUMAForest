@@ -39,7 +39,21 @@
 #include "ForestProbability.h"
 #include "Timer.h"
 
+//Testing!!
+#include "CUDAUtility.cuh"
+
 int main(int argc, char **argv) {
+
+/*	std::vector<std::vector<uint>> inbagCounts;
+	std::vector<std::vector<size_t>> samplesIDs;
+	std::vector<uint> seed;
+	size_t nTree = 100;
+	for (size_t i=0; i<nTree; ++i)
+	{
+		seed.push_back(static_cast<uint>(i));
+	}
+	CUDAUtility::getInstance().bootstrapTest(1000, 0.25, nTree, seed, samplesIDs, inbagCounts);
+	return 0; */
 
   ArgumentHandler arg_handler(argc, argv);
   Forest* forest = 0;
@@ -93,7 +107,7 @@ int main(int argc, char **argv) {
         arg_handler.predict, arg_handler.impmeasure, arg_handler.targetpartitionsize, arg_handler.splitweights,
         arg_handler.alwayssplitvars, arg_handler.statusvarname, arg_handler.replace, arg_handler.catvars,
         arg_handler.savemem, arg_handler.splitrule, arg_handler.caseweights, arg_handler.predall, arg_handler.fraction,
-        arg_handler.alpha, arg_handler.minprop, arg_handler.holdout, arg_handler.predictiontype);
+        arg_handler.alpha, arg_handler.minprop, arg_handler.holdout, arg_handler.predictiontype, arg_handler.cuda);
 
     forest->run(true);
     if (arg_handler.write) {

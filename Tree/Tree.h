@@ -51,7 +51,7 @@ public:
       std::vector<double>* split_select_weights, ImportanceMode importance_mode, uint min_node_size,
       std::vector<size_t>* no_split_variables, bool sample_with_replacement, std::vector<bool>* is_unordered,
       bool memory_saving_splitting, SplitRule splitrule, std::vector<double>* case_weights, bool keep_inbag,
-      double sample_fraction, double alpha, double minprop, bool holdout);
+      double sample_fraction, double alpha, double minprop, bool holdout, bool cuda);
 
   virtual void initInternal() = 0;
 
@@ -81,8 +81,40 @@ public:
     return num_samples_oob;
   }
 
-  const std::vector<size_t>& getInbagCounts() const {
+  const std::vector<uint>& getInbagCounts() const {
     return inbag_counts;
+  }
+
+  /**
+   * @brief Fuction used for set SamplesIDs.The main purpose is to be applied in the CUDA functionalities.
+   *
+   * @param sampleIDs std::vector<int> with the bootstrap samples IDs
+   * @param node node where this sample will be use.
+   */
+  void setSampleIDs(std::vector<size_t> sampleIDs, int node){
+    this->sampleIDs[node] = sampleIDs;
+  }
+
+  /**
+   * @brief Function used for set the histogram with samples used in the tree.
+   * The main purpose is to be applied in the CUDA functionalities.
+   *
+   * @param inbagCounts histogram with the samples used in the tree
+   */
+  void setInbagCounts(std::vector<uint> inbagCounts){
+    this->inbag_counts = inbagCounts;
+
+    // Save OOB samples
+    for (size_t s = 0; s < inbag_counts.size(); ++s) {
+      if (inbag_counts[s] == 0) {
+        oob_sampleIDs.push_back(s);
+      }
+    }
+    num_samples_oob = oob_sampleIDs.size();
+
+    if (!keep_inbag) {
+      inbag_counts.clear();
+    }
   }
 
 protected:
@@ -155,7 +187,7 @@ protected:
 
   // Inbag counts
   bool keep_inbag;
-  std::vector<size_t> inbag_counts;
+  std::vector<uint> inbag_counts;
 
   // Random number generator
   std::mt19937_64 random_number_generator;
@@ -178,6 +210,8 @@ protected:
   SplitRule splitrule;
   double alpha;
   double minprop;
+
+  bool cuda;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(Tree);

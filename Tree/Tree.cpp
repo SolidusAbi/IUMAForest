@@ -57,8 +57,9 @@ void Tree::init(Data* data, uint mtry, size_t dependent_varID, size_t num_sample
     std::vector<double>* split_select_weights, ImportanceMode importance_mode, uint min_node_size,
     std::vector<size_t>* no_split_variables, bool sample_with_replacement, std::vector<bool>* is_unordered,
     bool memory_saving_splitting, SplitRule splitrule, std::vector<double>* case_weights, bool keep_inbag,
-    double sample_fraction, double alpha, double minprop, bool holdout) {
+    double sample_fraction, double alpha, double minprop, bool holdout, bool cuda) {
 
+  this->cuda = cuda;
   this->data = data;
   this->mtry = mtry;
   this->dependent_varID = dependent_varID;
@@ -96,18 +97,20 @@ void Tree::grow(std::vector<double>* variable_importance) {
 
   this->variable_importance = variable_importance;
 
-// Bootstrap, dependent if weighted or not and with or without replacement
-  if (case_weights->empty()) {
-    if (sample_with_replacement) {
-      bootstrap();
+  // Bootstrap, dependent if weighted or not and with or without replacement
+  if (this->sampleIDs[0].empty()){
+    if (case_weights->empty()) {
+      if (sample_with_replacement) {
+        bootstrap();
+      } else {
+        bootstrapWithoutReplacement();
+      }
     } else {
-      bootstrapWithoutReplacement();
-    }
-  } else {
-    if (sample_with_replacement) {
-      bootstrapWeighted();
-    } else {
-      bootstrapWithoutReplacementWeighted();
+      if (sample_with_replacement) {
+        bootstrapWeighted();
+      } else {
+        bootstrapWithoutReplacementWeighted();
+      }
     }
   }
 

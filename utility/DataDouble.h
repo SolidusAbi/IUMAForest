@@ -64,6 +64,13 @@ public:
     data[col * num_rows + row] = value;
   }
 
+  double*  getData(){
+    return data;
+  }
+
+  void insertDataGPU();
+
+
 private:
   double* data;
 

@@ -36,6 +36,7 @@
 #include "TreeClassification.h"
 #include "utility.h"
 #include "Data.h"
+#include "CUDAUtility.cuh"
 
 TreeClassification::TreeClassification(std::vector<double>* class_values, std::vector<uint>* response_classIDs) :
     class_values(class_values), response_classIDs(response_classIDs), counter(0), counter_per_class(0) {
@@ -133,47 +134,60 @@ double TreeClassification::computePredictionAccuracyInternal() {
 
 bool TreeClassification::findBestSplit(size_t nodeID, std::vector<size_t>& possible_split_varIDs) {
 
+
   size_t num_samples_node = sampleIDs[nodeID].size();
   size_t num_classes = class_values->size();
   double best_decrease = -1;
   size_t best_varID = 0;
   double best_value = 0;
+  double best_decrease_cuda = -1;
+  size_t best_varID_cuda = 0;
+  double best_value_cuda = 0;
+  if (cuda && possible_split_varIDs.size() > 6){
+    CUDAUtility::getInstance().findBestSplit(data, possible_split_varIDs, num_classes,
+        num_samples_node, response_classIDs, &(sampleIDs[nodeID]), &best_varID, &best_value, &best_decrease);
+  }else{
+    size_t* class_counts = new size_t[num_classes]();
+    // Compute overall class counts
+    for (size_t i = 0; i < num_samples_node; ++i) {
+      size_t sampleID = sampleIDs[nodeID][i];
+      uint sample_classID = (*response_classIDs)[sampleID];
+      ++class_counts[sample_classID];
+    }
 
-  size_t* class_counts = new size_t[num_classes]();
-  // Compute overall class counts
-  for (size_t i = 0; i < num_samples_node; ++i) {
-    size_t sampleID = sampleIDs[nodeID][i];
-    uint sample_classID = (*response_classIDs)[sampleID];
-    ++class_counts[sample_classID];
-  }
+    // For all possible split variables
+    for (auto& varID : possible_split_varIDs) {
+      // Find best split value, if ordered consider all values as split values, else all 2-partitions
+      if ((*is_ordered_variable)[varID]) {
 
-  // For all possible split variables
-  for (auto& varID : possible_split_varIDs) {
-    // Find best split value, if ordered consider all values as split values, else all 2-partitions
-    if ((*is_ordered_variable)[varID]) {
-
-      // Use memory saving method if option set
-      if (memory_saving_splitting) {
-        findBestSplitValueSmallQ(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
-            best_decrease);
-      } else {
-        // Use faster method for both cases
-        double q = (double) num_samples_node / (double) data->getNumUniqueDataValues(varID);
-        if (q < Q_THRESHOLD) {
+        // Use memory saving method if option set
+        if (memory_saving_splitting) {
           findBestSplitValueSmallQ(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
               best_decrease);
         } else {
-          findBestSplitValueLargeQ(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
-              best_decrease);
+          // Use faster method for both cases
+          double q = (double) num_samples_node / (double) data->getNumUniqueDataValues(varID);
+          if (q < Q_THRESHOLD) {
+            findBestSplitValueSmallQ(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
+                best_decrease);
+          } else {
+            findBestSplitValueLargeQ(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
+                best_decrease);
+          }
         }
+      } else {
+        findBestSplitValueUnordered(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
+            best_decrease);
       }
-    } else {
-      findBestSplitValueUnordered(nodeID, varID, num_classes, class_counts, num_samples_node, best_value, best_varID,
-          best_decrease);
     }
+
+    delete[] class_counts;
   }
 
-  delete[] class_counts;
+  /*if (best_decrease == best_decrease_cuda){
+    printf("Cuadra hermano %lf == %lf\n", best_decrease, best_decrease_cuda);
+  } else
+    printf("NO Cuadra hermano %lf != %lf\n", best_decrease, best_decrease_cuda);*/
 
   // Stop if no good split found
   if (best_decrease < 0) {

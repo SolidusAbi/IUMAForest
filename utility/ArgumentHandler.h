@@ -72,6 +72,7 @@ public:
   std::string splitweights;
   uint nthreads;
   bool predall;
+  bool cuda;
 
   // All command line arguments as member: Small letters
   double alpha;

@@ -140,6 +140,8 @@ bool Data::loadFromFileOther(std::ifstream& input_file, std::string header_line,
   std::string header_token;
   std::stringstream header_line_stream(header_line);
   while (getline(header_line_stream, header_token, seperator)) {
+    if (!header_token.empty() && header_token[header_token.size() - 1] == '\r')
+      header_token.erase(header_token.size() - 1);
     variable_names.push_back(header_token);
   }
   num_cols = variable_names.size();

@@ -42,6 +42,7 @@
 #include "DataChar.h"
 #include "DataDouble.h"
 #include "DataFloat.h"
+#include "CUDAUtility.cuh"
 
 Forest::Forest() :
     verbose_out(0), num_trees(DEFAULT_NUM_TREE), mtry(0), min_node_size(0), num_variables(0), num_independent_variables(
@@ -49,7 +50,7 @@ Forest::Forest() :
         true), memory_saving_splitting(false), splitrule(DEFAULT_SPLITRULE), predict_all(false), keep_inbag(false), sample_fraction(
         1), holdout(false), prediction_type(DEFAULT_PREDICTIONTYPE), alpha(DEFAULT_ALPHA), minprop(DEFAULT_MINPROP), num_threads(
         DEFAULT_NUM_THREADS), data(0), overall_prediction_error(0), importance_mode(DEFAULT_IMPORTANCE_MODE), progress(
-        0) {
+        0), cuda(false) {
 }
 
 Forest::~Forest() {
@@ -64,9 +65,10 @@ void Forest::initCpp(std::string dependent_variable_name, MemoryMode memory_mode
     std::string split_select_weights_file, std::vector<std::string>& always_split_variable_names,
     std::string status_variable_name, bool sample_with_replacement, std::vector<std::string>& unordered_variable_names,
     bool memory_saving_splitting, SplitRule splitrule, std::string case_weights_file, bool predict_all,
-    double sample_fraction, double alpha, double minprop, bool holdout, PredictionType prediction_type) {
+    double sample_fraction, double alpha, double minprop, bool holdout, PredictionType prediction_type, bool cuda) {
 
   this->verbose_out = verbose_out;
+  this->cuda = cuda;
 
   // Initialize data with memmode
   switch (memory_mode) {
@@ -88,6 +90,9 @@ void Forest::initCpp(std::string dependent_variable_name, MemoryMode memory_mode
     *verbose_out << "Warning: Rounding or Integer overflow occurred. Use FLOAT or DOUBLE precision to avoid this."
         << std::endl;
   }
+
+  if (cuda)
+	  data->insertDataGPU(); ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Set prediction mode
   bool prediction_mode = false;
@@ -288,6 +293,8 @@ void Forest::run(bool verbose) {
 
     grow();
 
+    CUDAUtility::getInstance().freeDataGPU();
+
     if (verbose) {
       *verbose_out << "Computing prediction error .." << std::endl;
     }
@@ -316,6 +323,7 @@ void Forest::writeOutput() {
   *verbose_out << "Variable importance mode:          " << importance_mode << std::endl;
   *verbose_out << "Memory mode:                       " << memory_mode << std::endl;
   *verbose_out << "Seed:                              " << seed << std::endl;
+  *verbose_out << "CUDA:                              " << cuda << std::endl;
   *verbose_out << "Number of threads:                 " << num_threads << std::endl;
   *verbose_out << std::endl;
 
@@ -406,6 +414,7 @@ void Forest::grow() {
 
   // Init trees, create a seed for each tree, based on main seed
   std::uniform_int_distribution<uint> udist;
+  std::vector<uint> seedPerTree;
   for (size_t i = 0; i < num_trees; ++i) {
     uint tree_seed;
     if (seed == 0) {
@@ -413,6 +422,8 @@ void Forest::grow() {
     } else {
       tree_seed = (i + 1) * seed;
     }
+
+    seedPerTree.push_back(tree_seed);
 
     // Get split select weights for tree
     std::vector<double>* tree_split_select_weights;
@@ -425,10 +436,24 @@ void Forest::grow() {
     trees[i]->init(data, mtry, dependent_varID, num_samples, tree_seed, &deterministic_varIDs, &split_select_varIDs,
         tree_split_select_weights, importance_mode, min_node_size, &no_split_variables, sample_with_replacement,
         &is_ordered_variable, memory_saving_splitting, splitrule, &case_weights, keep_inbag, sample_fraction, alpha,
-        minprop, holdout);
+        minprop, holdout, cuda);
   }
 
-// Init variable importance
+  ///// Working!! /////
+  if (cuda == true){
+    std::vector<std::vector<size_t>> samplesIDsPerTree;
+    std::vector<std::vector<uint>> inbagCountsPerTree;
+    CUDAUtility::getInstance().bootstrap(num_samples,sample_fraction,num_trees, samplesIDsPerTree, inbagCountsPerTree);
+
+    //To set the result of GPU Bootstrap
+    for (int i=0; i< num_trees; ++i){
+      trees[i]->setSampleIDs(samplesIDsPerTree[i], 0);
+      trees[i]->setInbagCounts(inbagCountsPerTree[i]);
+    }
+  }
+  seedPerTree.clear();
+
+  // Init variable importance
   variable_importance.resize(num_independent_variables, 0);
 
 // Grow trees in multiple threads

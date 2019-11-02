@@ -1,4 +1,17 @@
+<<<<<<< HEAD
 /Debug/
 /Release/
 /ranger_out.confusion
 /ranger_out.importance
+=======
+Release/
+ranger_out.confusion
+ranger_out.importance
+Debug/
+ranger_out.prediction
+ranger_out.forest
+.cproject
+.metadata/
+ranger_out.log
+RemoteSystemsTempFiles/
+>>>>>>> TFM
