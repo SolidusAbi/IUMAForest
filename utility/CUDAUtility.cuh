@@ -77,7 +77,7 @@ public:
 //  void setDataGPU(double *data, size_t nCols, size_t nRows);
 
   /**
-   * ¡¡¡Chapuza!!! Arreglar!!!
+  * ¡¡¡Chapuza!!! Arreglar!!!
   * @brief This function allows you to insert the dataset into the memory of the GPU
   *
   * @param data  Contains the dataset
@@ -94,6 +94,16 @@ public:
   void resetGPU();
 
   void test(size_t nSamples, std::vector<size_t> *samplesIDsNode, size_t nClasses, std::vector<uint> *responseClassIDs);
+
+  // MULTIPLE STREAMS!! //
+  /**
+   * Just for testing
+   */
+  void multiStreamTest(float *data);
+
+  void setNumberThreads(uint nThreads);
+
+  ////////////////////////
 
 private:
   CUDAUtility();
@@ -114,7 +124,25 @@ private:
   size_t nCols, nRows;
 
   cudaDeviceProp deviceProp;
+
+  uint nThreads;
+  cudaStream_t *streams;
+
+  void allocateStreamMemory();
 };
 
+inline void CUDAUtility::setNumberThreads(uint nThreads)
+{
+	this->nThreads = nThreads;
+	allocateStreamMemory();
+}
+
+inline void CUDAUtility::allocateStreamMemory()
+{
+  if (streams != nullptr)
+	  free(streams);
+
+  streams = (cudaStream_t*)(malloc(nThreads*sizeof(cudaStream_t)));
+}
 
 #endif /* CUDAUTILITY_H_ */

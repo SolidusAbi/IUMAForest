@@ -23,7 +23,10 @@
 
 #define min(a,b) (a<b?a:b);
 
-CUDAUtility::CUDAUtility() : dev_data(nullptr), nCols(0), nRows(0) {
+CUDAUtility::CUDAUtility() : dev_data(nullptr), nCols(0), nRows(0), nThreads(1), streams(nullptr)
+{
+  allocateStreamMemory();
+
   cudaDeviceReset();
   cudaGetDeviceProperties(&deviceProp, 0);
 }
@@ -289,4 +292,9 @@ void CUDAUtility::freeDataGPU(){
 
 void CUDAUtility::resetGPU(){
   cudaDeviceReset();
+}
+
+void multiStreamTest(float *data)
+{
+
 }

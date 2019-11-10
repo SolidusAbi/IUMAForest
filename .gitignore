@@ -9,3 +9,5 @@ ranger_out.forest
 .settings/
 ranger_out.log
 RemoteSystemsTempFiles/
+
+.project
