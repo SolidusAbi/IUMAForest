@@ -447,6 +447,19 @@ void Forest::grow() {
 
     //To set the result of GPU Bootstrap
     for (int i=0; i< num_trees; ++i){
+      //Just for test
+      {
+    	  std::random_device rd;
+		  std::mt19937 gen(rd());
+		  std::uniform_int_distribution<> dis(0, static_cast<uint>(num_samples*sample_fraction));
+		  std::cout << "Bootstrap test in Tree: " << i << std::endl;
+    	  for (size_t sampleIdx = 0; sampleIdx < 10; ++sampleIdx)
+    	  {
+    		  std::cout << samplesIDsPerTree[i][dis(gen)] << ' ';
+    	  }
+    	  std::cout << std::endl;
+      }
+
       trees[i]->setSampleIDs(samplesIDsPerTree[i], 0);
       trees[i]->setInbagCounts(inbagCountsPerTree[i]);
     }
