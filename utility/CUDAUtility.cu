@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <random>
+#include <cmath>
+#include <iostream>
 
 // CUDA Includes
 #include <curand_kernel.h>
@@ -20,6 +23,7 @@
 #include "kernels/findBestSplitKernel.h"
 
 #include "Timer.h"
+
 
 #define min(a,b) (a<b?a:b);
 
@@ -79,26 +83,11 @@ void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree
   arrayToVector(samplesIDs, host_sampleIDs, host_sampleIDs_pitch/sizeof(size_t), nTree);
 //  arrayToVector(inbagCounts, host_inbagCounts, host_inbagCounts_pitch/sizeof(int), nTree);
 
-  for (int i=0; i< num_trees; ++i){
-	//Just for test
-	{
-	  std::random_device rd;
-	  std::mt19937 gen(rd());
-	  std::uniform_int_distribution<> dis(0, static_cast<uint>(num_samples*sample_fraction));
-	  std::cout << "Bootstrap test in Tree: " << i << std::endl;
-	  for (size_t sampleIdx = 0; sampleIdx < 10; ++sampleIdx)
-	  {
-		  std::cout << samplesIDs[i][dis(gen)] << ' ';
-	  }
-	  std::cout << std::endl;
-	}
-
 
   free(host_sampleIDs);
   free(host_inbagCounts);
   cudaFree(dev_sampleIDs);
 
-  exit(0);
 //  cudaFree(dev_inbagCounts);
 }
 
