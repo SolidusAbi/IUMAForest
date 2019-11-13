@@ -15,7 +15,9 @@
    * @param sampleIDs (output) bootstrap sample for each tree.
    * @param inbagCounts (output) histogram of each bootstrap sample.
    */
-  __global__ void bootstrap_kernel(size_t nTree, size_t nSamples, double sampleFraction,
-      uint seed, size_t* sampleIDs, uint* inbagCounts);
+//  __global__ void bootstrap_kernel(size_t nTree, size_t nSamples, double sampleFraction,
+//      uint seed, size_t* sampleIDs, uint* inbagCounts);
 
+  __global__ void bootstrap_kernel(size_t nTree, size_t nSamples, double sampleFraction,
+        uint seed, size_t* sampleIDs);
 #endif

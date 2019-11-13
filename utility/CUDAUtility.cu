@@ -23,9 +23,10 @@
 
 #define min(a,b) (a<b?a:b);
 
-CUDAUtility::CUDAUtility() : dev_data(nullptr), nCols(0), nRows(0) {
+CUDAUtility::CUDAUtility() : dev_data(nullptr), nCols(0), nRows(0), availableMemory(0)  {
   cudaDeviceReset();
   cudaGetDeviceProperties(&deviceProp, 0);
+  availableMemory = deviceProp.totalGlobalMem * 0.8;
 }
 
 CUDAUtility::~CUDAUtility() {
@@ -51,41 +52,54 @@ void CUDAUtility::bootstrap(size_t nSamples, double sampleFraction, size_t nTree
 
   //Device var
   size_t *dev_sampleIDs;
-  uint *dev_inbagCounts;
+  //uint *dev_inbagCounts;
   size_t dev_sampleIDs_pitch, dev_inbagCounts_pitch;
 
+  // (int)(nSamples * sampleFraction) * sizeof(size_t)
+  // nSamples * sizeof(int)
+
   cudaMallocPitch((void **)&dev_sampleIDs, &dev_sampleIDs_pitch, (int)(nSamples * sampleFraction) * sizeof(size_t), nTree);
-  cudaMallocPitch((void **)&dev_inbagCounts, &dev_inbagCounts_pitch, nSamples * sizeof(int), nTree);
+  //cudaMallocPitch((void **)&dev_inbagCounts, &dev_inbagCounts_pitch, nSamples * sizeof(int), nTree);
 
   //Initialize the histogram of inbag samples
-  cudaMemset2D(dev_inbagCounts, dev_inbagCounts_pitch, 0, nSamples * sizeof(int), nTree);
+  //cudaMemset2D(dev_inbagCounts, dev_inbagCounts_pitch, 0, nSamples * sizeof(int), nTree);
 
-  setConstantMemoryPitchBootstrap(&dev_sampleIDs_pitch, &dev_inbagCounts_pitch);
+  setConstantMemoryPitchBootstrap(&dev_sampleIDs_pitch, nullptr);
 
   int threadsPerBlock = min(nSamples, deviceProp.maxThreadsPerBlock);
-  bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, time(0), dev_sampleIDs,
-      dev_inbagCounts);
-//  bootstrap_kernel<<<nTree,120>>>(nTree, nSamples, sampleFraction, time(0), dev_sampleIDs,
-//        dev_inbagCounts);
+//  bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, time(0), dev_sampleIDs,
+//     dev_inbagCounts);
+  bootstrap_kernel<<<nTree,threadsPerBlock>>>(nTree, nSamples, sampleFraction, time(0), dev_sampleIDs);
 
   cudaMemcpy2D(host_sampleIDs, host_sampleIDs_pitch, dev_sampleIDs, dev_sampleIDs_pitch, host_sampleIDs_pitch,
       nTree, cudaMemcpyDeviceToHost);
-  cudaMemcpy2D(host_inbagCounts, host_inbagCounts_pitch, dev_inbagCounts, dev_inbagCounts_pitch,
-      host_inbagCounts_pitch, nTree, cudaMemcpyDeviceToHost);
+//  cudaMemcpy2D(host_inbagCounts, host_inbagCounts_pitch, dev_inbagCounts, dev_inbagCounts_pitch,
+//     host_inbagCounts_pitch, nTree, cudaMemcpyDeviceToHost);
 
   arrayToVector(samplesIDs, host_sampleIDs, host_sampleIDs_pitch/sizeof(size_t), nTree);
-  arrayToVector(inbagCounts, host_inbagCounts, host_inbagCounts_pitch/sizeof(int), nTree);
+//  arrayToVector(inbagCounts, host_inbagCounts, host_inbagCounts_pitch/sizeof(int), nTree);
 
-//  for (size_t treeIdx=0; treeIdx<2; ++treeIdx)
-//  {
-//	  for (size_t sampleIdx=0; sampleIdx<10; ++sampleIdx)
-//		  std::cout << samplesIDs[treeIdx][sampleIdx] << std::endl;
-//  }
+  for (int i=0; i< num_trees; ++i){
+	//Just for test
+	{
+	  std::random_device rd;
+	  std::mt19937 gen(rd());
+	  std::uniform_int_distribution<> dis(0, static_cast<uint>(num_samples*sample_fraction));
+	  std::cout << "Bootstrap test in Tree: " << i << std::endl;
+	  for (size_t sampleIdx = 0; sampleIdx < 10; ++sampleIdx)
+	  {
+		  std::cout << samplesIDs[i][dis(gen)] << ' ';
+	  }
+	  std::cout << std::endl;
+	}
+
 
   free(host_sampleIDs);
   free(host_inbagCounts);
   cudaFree(dev_sampleIDs);
-  cudaFree(dev_inbagCounts);
+
+  exit(0);
+//  cudaFree(dev_inbagCounts);
 }
 
 float CUDAUtility::bootstrapTest(size_t nSamples, double sampleFraction, size_t nTree, std::vector<uint>seeds,

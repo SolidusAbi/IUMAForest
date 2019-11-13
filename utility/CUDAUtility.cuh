@@ -114,6 +114,7 @@ private:
   size_t nCols, nRows;
 
   cudaDeviceProp deviceProp;
+  size_t availableMemory;
 };
 
 
